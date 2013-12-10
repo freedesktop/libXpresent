@@ -176,8 +176,75 @@ XPresentWireToCookie(Display	                *dpy,
 
         break;
     }
-    case PresentRedirectNotify:
+    case PresentIdleNotify: {
+        xPresentIdleNotify *proto = (xPresentIdleNotify *) ge;
+        XPresentIdleNotifyEvent *ce = malloc (sizeof (XPresentIdleNotifyEvent));
+        cookie->data = ce;
+
+        ce->type = cookie->type;
+        ce->serial = cookie->serial;
+        ce->send_event = cookie->send_event;
+        ce->display = cookie->display;
+        ce->extension = cookie->extension;
+        ce->evtype = cookie->evtype;
+
+        ce->eid = proto->eid;
+        ce->window = proto->window;
+        ce->serial_number = proto->serial;
+        ce->idle_fence = proto->idle_fence;
+
         break;
+    }
+    case PresentRedirectNotify: {
+        xPresentRedirectNotify *proto = (xPresentRedirectNotify *) ge;
+        xPresentNotify *xNotify = (xPresentNotify *) (proto + 1);
+        int nnotifies = (((proto->length + 8) - (sizeof (xPresentRedirectNotify) >> 2))) >> 1;
+        XPresentRedirectNotifyEvent *re = malloc (sizeof (XPresentRedirectNotifyEvent) + nnotifies * sizeof (XPresentNotify));
+        XPresentNotify *XNotify = (XPresentNotify *) (re + 1);
+        int i;
+        cookie->data = re;
+
+        re->type = cookie->type;
+        re->serial = cookie->serial;
+        re->send_event = cookie->send_event;
+        re->display = cookie->display;
+        re->extension = cookie->extension;
+        re->evtype = cookie->evtype;
+
+        re->eid = proto->eid;
+        re->event_window = proto->event_window;
+
+        re->window = proto->window;
+        re->pixmap = proto->pixmap;
+        re->serial_number = proto->serial;
+
+        re->valid_region = proto->valid_region;
+        re->update_region = proto->update_region;
+
+        re->valid_rect = *(XRectangle *) &(proto->valid_rect);
+        re->update_rect = *(XRectangle *) &(proto->update_rect);
+
+        re->x_off = proto->x_off;
+        re->y_off = proto->y_off;
+        re->target_crtc = proto->target_crtc;
+
+        re->wait_fence = proto->wait_fence;
+        re->idle_fence = proto->idle_fence;
+
+        re->options = proto->options;
+
+        re->target_msc = proto->target_msc;
+        re->divisor = proto->divisor;
+        re->remainder = proto->remainder;
+
+        re->nnotifies = nnotifies;
+        re->notifies = XNotify;
+        for (i = 0; i < nnotifies; i++) {
+            XNotify[i].window = xNotify[i].window;
+            XNotify[i].serial = xNotify[i].serial;
+        }
+        break;
+    }
     default:
         printf("XPresentWireToCookie: Unknown generic event. type %d\n", ge->evtype);
 
@@ -395,7 +462,7 @@ XPresentVersion (void)
 }
 
 void
-XPresentRegion(Display *dpy,
+XPresentPixmap(Display *dpy,
                Window window,
                Pixmap pixmap,
                uint32_t serial,
@@ -403,20 +470,26 @@ XPresentRegion(Display *dpy,
                XserverRegion update,
                int x_off,
                int y_off,
-               XID idle_fence,
+               RRCrtc target_crtc,
+               XSyncFence wait_fence,
+               XSyncFence idle_fence,
+               uint32_t options,
                uint64_t target_msc,
                uint64_t divisor,
-               uint64_t remainder)
+               uint64_t remainder,
+               XPresentNotify *notifies,
+               int nnotifies)
 {
     XPresentExtDisplayInfo	*info = XPresentFindDisplay (dpy);
-    xPresentRegionReq           *req;
+    xPresentPixmapReq           *req;
+    long                        len = ((long) nnotifies) << 1;
 
     XPresentSimpleCheckExtension (dpy, info);
 
     LockDisplay (dpy);
-    GetReq(PresentRegion, req);
+    GetReq(PresentPixmap, req);
     req->reqType = info->codes->major_opcode;
-    req->presentReqType = X_PresentRegion;
+    req->presentReqType = X_PresentPixmap;
     req->window = window;
     req->pixmap = pixmap;
     req->serial = serial;
@@ -424,10 +497,15 @@ XPresentRegion(Display *dpy,
     req->update = update;
     req->x_off = x_off;
     req->y_off = y_off;
+    req->target_crtc = target_crtc;
+    req->wait_fence = wait_fence;
     req->idle_fence = idle_fence;
+    req->options = options;
     req->target_msc = target_msc;
     req->divisor = divisor;
     req->remainder = remainder;
+    SetReqLen(req, len, len);
+    Data32(dpy, (CARD32 *) notifies, len);
     UnlockDisplay (dpy);
     SyncHandle();
 }
@@ -479,3 +557,30 @@ XPresentSelectInput(Display *dpy,
     SyncHandle();
     return eid;
 }
+
+uint32_t
+XPresentQueryCapabilities(Display *dpy,
+                          XID target)
+{
+    XPresentExtDisplayInfo	        *info = XPresentFindDisplay (dpy);
+    xPresentQueryCapabilitiesReq        *req;
+    xPresentQueryCapabilitiesReply      rep;
+
+    XPresentCheckExtension (dpy, info, 0);
+    LockDisplay (dpy);
+    GetReq(PresentQueryCapabilities, req);
+    req->reqType = info->codes->major_opcode;
+    req->presentReqType = X_PresentQueryCapabilities;
+    req->target = target;
+
+    if (!_XReply (dpy, (xReply *) &rep, 0, xFalse)) {
+	UnlockDisplay (dpy);
+	SyncHandle ();
+        return 0;
+    }
+
+    UnlockDisplay (dpy);
+    SyncHandle();
+    return rep.capabilities;
+}
+

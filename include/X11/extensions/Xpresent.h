@@ -29,6 +29,8 @@
 #include <X11/Xfuncproto.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
+#include <X11/extensions/Xrandr.h>
+#include <X11/extensions/sync.h>
 
 /*
  * This revision number also appears in configure.ac, they have
@@ -40,6 +42,11 @@
 /**
  * Generic Present event. All Present events have the same header.
  */
+
+typedef struct {
+    Window      window;
+    uint32_t    serial;
+} XPresentNotify;
 
 typedef struct {
     int type;			/* event base */
@@ -82,6 +89,58 @@ typedef struct {
     uint64_t msc;
 } XPresentCompleteNotifyEvent;
 
+typedef struct {
+    int type;			/* event base */
+    unsigned long serial;
+    Bool send_event;
+    Display *display;
+    int extension;
+    int evtype;
+
+    uint32_t eid;
+    Window window;
+    uint32_t serial_number;
+    Pixmap pixmap;
+    XSyncFence idle_fence;
+} XPresentIdleNotifyEvent;
+
+typedef struct {
+    int type;			/* event base */
+    unsigned long serial;
+    Bool send_event;
+    Display *display;
+    int extension;
+    int evtype;
+
+    uint32_t eid;
+    Window event_window;
+
+    Window window;
+    Pixmap pixmap;
+    uint32_t serial_number;
+
+    XserverRegion valid_region;
+    XserverRegion update_region;
+
+    XRectangle valid_rect;
+    XRectangle update_rect;
+
+    int x_off, y_off;
+
+    RRCrtc target_crtc;
+
+    XSyncFence wait_fence;
+    XSyncFence idle_fence;
+
+    uint32_t options;
+
+    uint64_t target_msc;
+    uint64_t divisor;
+    uint64_t remainder;
+    XPresentNotify *notifies;
+    int nnotifies;
+} XPresentRedirectNotifyEvent;
+
 _XFUNCPROTOBEGIN
 
 Bool XPresentQueryExtension (Display *dpy,
@@ -96,7 +155,7 @@ Status XPresentQueryVersion (Display *dpy,
 int XPresentVersion (void);
 
 void
-XPresentRegion(Display *dpy,
+XPresentPixmap(Display *dpy,
                Window window,
                Pixmap pixmap,
                uint32_t serial,
@@ -104,10 +163,15 @@ XPresentRegion(Display *dpy,
                XserverRegion update,
                int x_off,
                int y_off,
-               XID idle_fence,
+               RRCrtc target_crtc,
+               XSyncFence wait_fence,
+               XSyncFence idle_fence,
+               uint32_t options,
                uint64_t target_msc,
                uint64_t divisor,
-               uint64_t remainder);
+               uint64_t remainder,
+               XPresentNotify *notifies,
+               int nnotifies);
 
 void
 XPresentNotifyMSC(Display *dpy,
@@ -121,6 +185,10 @@ XID
 XPresentSelectInput(Display *dpy,
                     Window window,
                     unsigned event_mask);
+
+uint32_t
+XPresentQueryCapabilities(Display *dpy,
+                          XID target);
 
 _XFUNCPROTOEND
 
