@@ -87,6 +87,8 @@ typedef struct {
     uint32_t serial_number;
     uint64_t ust;
     uint64_t msc;
+    uint8_t kind;
+    uint8_t mode;
 } XPresentCompleteNotifyEvent;
 
 typedef struct {

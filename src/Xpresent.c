@@ -175,6 +175,8 @@ XPresentWireToCookie(Display	                *dpy,
         ce->serial_number = proto->serial;
         ce->ust = proto->ust;
         ce->msc = proto->msc;
+        ce->kind = proto->kind;
+        ce->mode = proto->mode;
 
         break;
     }
@@ -193,6 +195,7 @@ XPresentWireToCookie(Display	                *dpy,
         ce->eid = proto->eid;
         ce->window = proto->window;
         ce->serial_number = proto->serial;
+        ce->pixmap = proto->pixmap;
         ce->idle_fence = proto->idle_fence;
 
         break;
