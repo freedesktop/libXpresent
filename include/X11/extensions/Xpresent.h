@@ -104,6 +104,8 @@ typedef struct {
     XSyncFence idle_fence;
 } XPresentIdleNotifyEvent;
 
+#if PRESENT_FUTURE_VERSION
+
 typedef struct {
     int type;			/* event base */
     unsigned long serial;
@@ -140,6 +142,8 @@ typedef struct {
     XPresentNotify *notifies;
     int nnotifies;
 } XPresentRedirectNotifyEvent;
+
+#endif
 
 _XFUNCPROTOBEGIN
 

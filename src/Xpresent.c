@@ -95,7 +95,9 @@ XPresentCopyCookie(Display              *dpy,
     switch(in->evtype) {
     case PresentConfigureNotify:
     case PresentCompleteNotify:
+#if PRESENT_FUTURE_VERSION
     case PresentRedirectNotify:
+#endif
         break;
     default:
         printf("XPresentCopyCookie: unknown evtype %d\n", in->evtype);
@@ -195,6 +197,7 @@ XPresentWireToCookie(Display	                *dpy,
 
         break;
     }
+#if PRESENT_FUTURE_VERSION
     case PresentRedirectNotify: {
         xPresentRedirectNotify *proto = (xPresentRedirectNotify *) ge;
         xPresentNotify *xNotify = (xPresentNotify *) (proto + 1);
@@ -245,6 +248,7 @@ XPresentWireToCookie(Display	                *dpy,
         }
         break;
     }
+#endif
     default:
         printf("XPresentWireToCookie: Unknown generic event. type %d\n", ge->evtype);
 
