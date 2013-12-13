@@ -192,6 +192,11 @@ XPresentSelectInput(Display *dpy,
                     Window window,
                     unsigned event_mask);
 
+void
+XPresentFreeInput(Display *dpy,
+                  Window window,
+                  XID event_id);
+
 uint32_t
 XPresentQueryCapabilities(Display *dpy,
                           XID target);

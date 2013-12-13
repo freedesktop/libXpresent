@@ -565,6 +565,26 @@ XPresentSelectInput(Display *dpy,
     return eid;
 }
 
+void
+XPresentFreeInput(Display *dpy,
+                  Window window,
+                  XID event_id)
+{
+    XPresentExtDisplayInfo	*info = XPresentFindDisplay (dpy);
+    xPresentSelectInputReq      *req;
+
+    XPresentSimpleCheckExtension (dpy, info);
+    LockDisplay (dpy);
+    GetReq(PresentSelectInput, req);
+    req->reqType = info->codes->major_opcode;
+    req->presentReqType = X_PresentSelectInput;
+    req->eid = event_id;
+    req->window = window;
+    req->eventMask = 0;
+    UnlockDisplay (dpy);
+    SyncHandle();
+}
+
 uint32_t
 XPresentQueryCapabilities(Display *dpy,
                           XID target)
