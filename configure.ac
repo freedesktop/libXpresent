@@ -36,6 +36,8 @@ AC_INIT(libXpresent, [1.0.0],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXpresent])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_AUX_DIR([.])
+AC_CONFIG_MACRO_DIR([m4])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])

@@ -26,6 +26,8 @@ pkgconfig_DATA = xpresent.pc
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
+ACLOCAL_AMFLAGS=-I m4
+
 .PHONY: ChangeLog INSTALL
 
 INSTALL:
