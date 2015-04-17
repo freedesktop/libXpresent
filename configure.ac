@@ -32,7 +32,7 @@ AC_PREREQ([2.60])
 # that 'revision' number appears in Xpresent.h and has to be manually
 # synchronized.
 #
-AC_INIT(libXpresent, [1.0.0],
+AC_INIT(libXpresent, [0.0.0],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXpresent])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
