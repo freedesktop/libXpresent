@@ -58,7 +58,7 @@ PRESENTEXT_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/
 AC_SUBST(PRESENTEXT_VERSION)
 
 # Obtain compiler/linker options for depedencies
-PKG_CHECK_MODULES(PRESENTEXT, xproto [presentproto >= $PRESENTEXT_VERSION] xextproto x11)
+PKG_CHECK_MODULES(PRESENTEXT, xproto [presentproto >= $PRESENTEXT_VERSION] xextproto x11 xext xfixes xrandr)
 
 AC_CONFIG_FILES([Makefile
 		src/Makefile
